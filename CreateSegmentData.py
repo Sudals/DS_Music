@@ -102,13 +102,14 @@ def save_to_mapping(data, output_mapping_path):
     # csv 파일로 저장 (인코딩은 cp949로 설정)
     df.to_csv(output_mapping_path, index=False, encoding='cp949')
 
-
 if __name__ == "__main__":
-    # 현재 작업 디렉토리 내의 모든 음악 파일 분석
-    labelClass = "reggae"  # 장르
-    input_directory = os.getcwd() + "/SoundTrack/" + labelClass  # 음원 경로 가져오기
-    output_csv_path = "Reggae_Data.csv"  # 출력 csv 이름 설정
-    output_mapping_path = "Reggae_Map.csv"
+    time = 30  # 초 단위
+    labelClass = "disco"  # 장르
+
+    input_directory = os.getcwd() + "/SoundTrack/" + labelClass # 현재 경로 가져오기
+    output_csv_path = "out_Data.csv"  # 출력 csv 이름 설정
+    output_mapping_path = "out_Map.csv"
+
     data = []  # csv에 쓰일 data 리스트
     map = []
     i = 100  # 음원 인덱스

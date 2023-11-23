@@ -100,15 +100,16 @@ def save_to_mapping(data, output_mapping_path):
 
 if __name__ == "__main__":
     time = 30  # 초 단위
+    labelClass = "disco"  # 장르
 
     # 현재 작업 디렉토리 내의 모든 음악 파일 분석
-    input_directory = os.getcwd()  # 현재 경로가져오기
+    input_directory = os.getcwd() + "/SoundTrack/" + labelClass # 현재 경로 가져오기
     output_csv_path = "out_Data.csv"  # 출력 csv 이름 설정
     output_mapping_path = "out_Map.csv"
     data = []  # csv에 쓰일 data 리스트
     map = []
     i = 100  # 음원 인덱스
-    labelClass = "classical" #장르
+
     for filename in os.listdir(input_directory):  # 폴더 내부 탐색
         if filename.endswith(".mp3") or filename.endswith(".wav"):  # 파일이 mp3 or wav인 경우
             file_path = os.path.join(input_directory, filename)  # path 합치기

@@ -98,7 +98,7 @@ def save_to_mapping(data, output_mapping_path):
 
 if __name__ == "__main__":
     # 현재 작업 디렉토리 내의 모든 음악 파일 분석
-    labelClass = "disco"  # 장르
+    labelClass = "reggae"  # 장르
     input_directory = os.getcwd() + "/SoundTrack/" + labelClass  # 음원 경로 가져오기
     output_csv_path = "output_data.csv"  # 출력 csv 이름 설정
     output_mapping_path = "output_mapping.csv"

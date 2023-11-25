@@ -102,9 +102,9 @@ def save_to_mapping(data, output_mapping_path):
     # csv 파일로 저장 (인코딩은 cp949로 설정)
     df.to_csv(output_mapping_path, index=False, encoding='cp949')
 
+
 if __name__ == "__main__":
-    time = 30  # 초 단위
-    labelClass = "disco"  # 장르
+    labelClass = "reggae"  # 장르
 
     input_directory = os.getcwd() + "/SoundTrack/" + labelClass # 현재 경로 가져오기
     output_csv_path = "out_Data.csv"  # 출력 csv 이름 설정

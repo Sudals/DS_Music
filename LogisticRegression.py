@@ -78,7 +78,6 @@ train_input2, test_input2, train_target2, test_target2 = train_test_split(music_
 ss.fit(train_input2)
 
 # 데이터 정규화
-train_scaled2 = ss.transform(train_input2)
 test_scaled2 = ss.transform(test_input2)
 
 print("우리팀 데이터2 정확도 : " + str(lr.score(test_scaled2, test_target2)))

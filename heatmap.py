@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 # 예시 데이터프레임 생성
 # CSV 파일 읽기
-data = pd.read_csv('Data/features_30_sec.csv')
+data = pd.read_csv('Data/GTZAN_features_30_sec.csv')
 
 # 첫 번째 열과 마지막 열 제외하고 나머지 열 선택
 selected_data = data.iloc[:, 1:-1]  # 첫 번째 열부터 마지막 열 이전까지 선택

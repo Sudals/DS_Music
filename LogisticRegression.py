@@ -39,7 +39,9 @@ features = ['chroma_stft_mean', 'chroma_stft_var', 'chroma_stft_var', 'rms_var',
             'mfcc17_mean',
             'mfcc17_var', 'mfcc18_mean', 'mfcc18_var', 'mfcc19_mean', 'mfcc19_var', 'mfcc20_mean', 'mfcc20_var']
 
+# music = pd.read_csv('result/GTZAN_features_30_sec.csv')
 music = pd.read_csv('features_30_sec_1.csv')
+# music = pd.read_csv('features_3_sec.csv')
 
 music_input = music[features].to_numpy()
 music_target = music['label'].to_numpy()
@@ -52,6 +54,12 @@ ss.fit(train_input)
 
 train_scaled = ss.transform(train_input)
 test_scaled = ss.transform(test_input)
+
+mean = ss.mean_
+std = ss.scale_
+
+np.savetxt('mean_logistic.txt', mean, fmt='%.22f')
+np.savetxt('std_logistic.txt', std, fmt='%.18f')
 
 # 이상치 제거
 # train_scaled, train_target = removeOutlier(train_scaled, train_target)

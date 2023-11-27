@@ -117,9 +117,9 @@ def save_to_mapping(data, output_mapping_path):
 
 
 if __name__ == "__main__":
-    labelClass = "classical"  # 장르
+    labelClass = "reggae"  # 장르
 
-    input_directory = os.getcwd() # 현재 경로 가져오기
+    input_directory = os.getcwd() + "/SoundTrack/" + labelClass  # 현재 경로 가져오기
     print(input_directory)
     output_csv_path = "out_Data.csv"  # 출력 csv 이름 설정
     output_mapping_path = "out_Map.csv"
@@ -137,7 +137,7 @@ if __name__ == "__main__":
             features = analyze_audio(file_path, labelClass, i)
             mapping = map_data(file_path, labelClass, i)
 
-            data=pd.concat([data,features],axis=0)  # 결과를 data 리스트에 저장
+            data=pd.concat([data,features], axis=0)  # 결과를 data 리스트에 저장
             #print(data)
 
             map.append(mapping)

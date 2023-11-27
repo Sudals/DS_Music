@@ -53,8 +53,8 @@ ss.fit(train_input)
 ss2.fit(train_input2)
 
 train_scaled = ss.transform(train_input)
+test_scaled = ss.transform(test_input)
 
-test_scaled = ss2.transform(test_input)
 test_scaled2 = ss2.transform(test_input2)
 
 # 이상치 제거

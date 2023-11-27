@@ -3,7 +3,7 @@ import pandas as pd
 import os
 
 
-def analyze_audio(file_path, label, i, duration=30):
+def analyze_audio(file_path, label, i, duration=30 ,segment_duration=3):
     # 음원 파일 로드
     y, sr = librosa.load(file_path, sr=22050)
 
@@ -12,7 +12,7 @@ def analyze_audio(file_path, label, i, duration=30):
 
     segment_duration = 30  # 구간 길이
     step = 1  # 이동할 스텝
-
+    j=0
     max_energy = 0
     max_start = 0
     tmp_segment=0
@@ -25,49 +25,51 @@ def analyze_audio(file_path, label, i, duration=30):
             tmp_segment=segment
             max_start = start / sr  # 최대 에너지를 가진 구간의 시작 시간
     y=tmp_segment
+    segments = []
+    for start in range(max_start, max_start + duration * sr, 3 * sr):
+        segment = y[start:start + 3 * sr]
 
-    # 각종 특징 추출
-    chroma_stft_mean = librosa.feature.chroma_stft(y=y).mean()
-    chroma_stft_var = librosa.feature.chroma_stft(y=y).var()
-    rms_mean = librosa.feature.rms(y=y).mean()
-    rms_var = librosa.feature.rms(y=y).var()
-    spectral_centroid_mean = librosa.feature.spectral_centroid(y=y, sr=sr).mean()
-    spectral_centroid_var = librosa.feature.spectral_centroid(y=y, sr=sr).var()
-    spectral_bandwidth_mean = librosa.feature.spectral_bandwidth(y=y, sr=sr).mean()
-    spectral_bandwidth_var = librosa.feature.spectral_bandwidth(y=y, sr=sr).var()
-    rolloff_mean = librosa.feature.spectral_rolloff(y=y, sr=sr).mean()
-    rolloff_var = librosa.feature.spectral_rolloff(y=y, sr=sr).var()
-    zero_crossing_rate_mean = librosa.feature.zero_crossing_rate(y).mean()
-    zero_crossing_rate_var = librosa.feature.zero_crossing_rate(y).var()
+        # 각 세그먼트에 대한 특징 추출
+        chroma_stft_mean = librosa.feature.chroma_stft(y=segment).mean()
+        chroma_stft_var = librosa.feature.chroma_stft(y=segment).var()
+        rms_mean = librosa.feature.rms(y=segment).mean()
+        rms_var = librosa.feature.rms(y=segment).var()
+        spectral_centroid_mean = librosa.feature.spectral_centroid(y=segment, sr=sr).mean()
+        spectral_centroid_var = librosa.feature.spectral_centroid(y=segment, sr=sr).var()
+        spectral_bandwidth_mean = librosa.feature.spectral_bandwidth(y=segment, sr=sr).mean()
+        spectral_bandwidth_var = librosa.feature.spectral_bandwidth(y=segment, sr=sr).var()
+        rolloff_mean = librosa.feature.spectral_rolloff(y=segment, sr=sr).mean()
+        rolloff_var = librosa.feature.spectral_rolloff(y=segment, sr=sr).var()
+        zero_crossing_rate_mean = librosa.feature.zero_crossing_rate(segment).mean()
+        zero_crossing_rate_var = librosa.feature.zero_crossing_rate(segment).var()
 
-    # 추가적인 특징
-    harmony, perceptr = librosa.effects.hpss(y)
-    harmony_mean, harmony_var = harmony.mean(), harmony.var()
-    perceptr_mean, perceptr_var = perceptr.mean(), perceptr.var()
+        # 추가적인 특징
+        harmony, perceptr = librosa.effects.hpss(segment)
+        harmony_mean, harmony_var = harmony.mean(), harmony.var()
+        perceptr_mean, perceptr_var = perceptr.mean(), perceptr.var()
 
-    # onset 강도 계산 및 템포 추출
-    onset_env = librosa.onset.onset_strength(y=y, sr=sr)
-    tempo, _ = librosa.beat.beat_track(onset_envelope=onset_env, sr=sr)
+        # onset 강도 계산 및 템포 추출
+        onset_env = librosa.onset.onset_strength(y=segment, sr=sr)
+        tempo, _ = librosa.beat.beat_track(onset_envelope=onset_env, sr=sr)
 
-    # MFCC 특징 (20개 계수)
-    mfcc_features = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=20)
-    mfcc_means = mfcc_features.mean(axis=1)
-    mfcc_vars = mfcc_features.var(axis=1)
-    #print(mfcc_means)
-    #print(mfcc_vars);
+        # MFCC 특징 (20개 계수)
+        mfcc_features = librosa.feature.mfcc(y=segment, sr=sr, n_mfcc=20)
+        mfcc_means = mfcc_features.mean(axis=1)
+        mfcc_vars = mfcc_features.var(axis=1)
 
-    # 특징들을 리스트로 반환
-    features = [f"{label}.{str(i).zfill(5)}.wav", len(y), chroma_stft_mean.mean(), chroma_stft_var.mean(),
-                rms_mean.mean(), rms_var.mean(), spectral_centroid_mean.mean(), spectral_centroid_var.mean(),
-                spectral_bandwidth_mean.mean(), spectral_bandwidth_var.mean(), rolloff_mean.mean(), rolloff_var.mean(),
-                zero_crossing_rate_mean.mean(), zero_crossing_rate_var.mean(),
-                harmony_mean, harmony_var, perceptr_mean, perceptr_var, tempo]
+        # 특징들을 리스트로 반환
+        features = [f"{label}.{str(i).zfill(5)}.{j}.wav", len(y), chroma_stft_mean.mean(), chroma_stft_var.mean(),
+                    rms_mean.mean(), rms_var.mean(), spectral_centroid_mean.mean(), spectral_centroid_var.mean(),
+                    spectral_bandwidth_mean.mean(), spectral_bandwidth_var.mean(), rolloff_mean.mean(),
+                    rolloff_var.mean(),
+                    zero_crossing_rate_mean.mean(), zero_crossing_rate_var.mean(),
+                    harmony_mean, harmony_var, perceptr_mean, perceptr_var, tempo]
 
-    for i in range(len(mfcc_means)):
-        features.append(mfcc_means[i])
-        features.append(mfcc_vars[i])
-    features.append(label)
-
+        for i in range(len(mfcc_means)):
+            features.append(mfcc_means[i])
+            features.append(mfcc_vars[i])
+        features.append(label)
+        j+=1
     return features
 
 
@@ -77,7 +79,7 @@ def map_data(file_path, label, i):
 
 def save_to_csv(data, output_path):
     # 데이터프레임 생성 및 CSV로 저장
-    df = pd.DataFrame(data, columns=[
+    columns = [
         'filename', 'length', 'chroma_stft_mean', 'chroma_stft_var', 'rms_mean', 'rms_var',
         'spectral_centroid_mean', 'spectral_centroid_var', 'spectral_bandwidth_mean', 'spectral_bandwidth_var',
         'rolloff_mean', 'rolloff_var', 'zero_crossing_rate_mean', 'zero_crossing_rate_var',
@@ -89,9 +91,14 @@ def save_to_csv(data, output_path):
         'mfcc13_mean', 'mfcc13_var', 'mfcc14_mean', 'mfcc14_var', 'mfcc15_mean', 'mfcc15_var',
         'mfcc16_mean', 'mfcc16_var', 'mfcc17_mean', 'mfcc17_var', 'mfcc18_mean', 'mfcc18_var',
         'mfcc19_mean', 'mfcc19_var', 'mfcc20_mean', 'mfcc20_var', 'label'
-    ])
-    # csv 파일로 저장 (인코딩은 cp949로 설정)
-    df.to_csv(output_path, index=False, encoding='cp949')
+    ]
+
+    df = pd.DataFrame(columns=columns)  # 빈 데이터프레임 생성
+
+    for row in data:
+        df = df.append(pd.Series(row, index=df.columns), ignore_index=True)  # 1차원씩 처리하여 데이터프레임에 추가
+
+    df.to_csv(output_path, index=False, encoding='cp949')  # csv 파일로 저장
 
 
 def save_to_mapping(data, output_mapping_path):
@@ -104,7 +111,7 @@ def save_to_mapping(data, output_mapping_path):
 
 
 if __name__ == "__main__":
-    labelClass = "reggae"  # 장르
+    labelClass = "classical"  # 장르
 
     input_directory = os.getcwd() + "/SoundTrack/" + labelClass # 현재 경로 가져오기
     output_csv_path = "out_Data.csv"  # 출력 csv 이름 설정

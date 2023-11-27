@@ -12,7 +12,7 @@ def find_encoding(file_path):
     return encoding
 
 # 파일 경로 설정
-excel_file_path = "F_features_30_sec.csv"
+excel_file_path = "result/F_features_30_sec.csv"
 
 # 파일의 인코딩 찾기
 detected_encoding = find_encoding(excel_file_path)

@@ -4,7 +4,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier, kneighbors_graph
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
+import warnings
 from sklearn.manifold import MDS
+
+warnings.filterwarnings("ignore", message="The default value of `normalized_stress` will change")
+
 import librosa
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
@@ -56,13 +60,14 @@ def load_gtzan_dataset_csv(file_path):
 
     # X는 선택한 특징 열, y는 'genre' 열
     X = df_selected.drop(columns=['label'])
+
     y = df_selected['label']
 
 
     return X.to_numpy(), y.to_numpy()
 
 # 음악 파일에서 특징 추출
-excel_file_path = "S_features_30_sec.csv"
+excel_file_path = "result/S_features_30_sec.csv"
 
 # 데이터셋 로드
 X, y = load_gtzan_dataset_csv(excel_file_path)

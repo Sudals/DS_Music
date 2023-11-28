@@ -40,7 +40,7 @@ features = ['chroma_stft_mean', 'chroma_stft_var', 'chroma_stft_var', 'rms_var',
             'mfcc17_var', 'mfcc18_mean', 'mfcc18_var', 'mfcc19_mean', 'mfcc19_var', 'mfcc20_mean', 'mfcc20_var']
 
 # music = pd.read_csv('result/GTZAN_features_30_sec.csv')
-music = pd.read_csv('features_30_sec_1.csv')
+music = pd.read_csv('result/total_3sec/DS_feature_3_sec_1.csv')
 # music = pd.read_csv('features_3_sec.csv')
 
 music_input = music[features].to_numpy()

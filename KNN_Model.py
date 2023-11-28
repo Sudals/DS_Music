@@ -67,7 +67,7 @@ def load_gtzan_dataset_csv(file_path):
     return X.to_numpy(), y.to_numpy()
 
 # 음악 파일에서 특징 추출
-excel_file_path = "result/S_features_30_sec.csv"
+excel_file_path = "result/total_3sec/DS_feature_3_sec_1.csv"
 
 # 데이터셋 로드
 X, y = load_gtzan_dataset_csv(excel_file_path)

@@ -82,7 +82,7 @@ pca_1 = PCA(n_components=55)  # 주성분 수는 조정 가능
 X_pca_1 = pca_1.fit_transform(X_train_scaled)
 
 # 데이터셋을 훈련 세트와 테스트 세트로 분할
-X_train, X_test, y_train, y_test = train_test_split(X_pca_1, y, test_size=0.2,random_state=21)
+X_train, X_test, y_train, y_test = train_test_split(X_train_scaled, y, test_size=0.2,random_state=25)
 
 
 # 추정된 평균과 표준 편차를 파일에 저장
@@ -112,7 +112,9 @@ print("=======================================")
 print(f"Number of outliers: {num_outliers}")
 # 이상치 제거
 X_train_no_outliers = X_train[~outliers]
+print(len(X_train_no_outliers))
 y_train_no_outliers = y_train[~outliers]
+print(len(y_train_no_outliers))
 
 # KNN 모델 초기화
 knn_model = KNeighborsClassifier()
@@ -125,7 +127,7 @@ grid_search = GridSearchCV(knn_model, param_grid, scoring='f1_micro', cv=5)
 
 
 # 그리드 서치를 사용하여 최적의 하이퍼파라미터 찾기
-grid_search.fit(X_train_no_outliers, y_train_no_outliers)
+grid_search.fit(X_train,y_train)
 
 # 최적의 하이퍼파라미터 출력
 best_params = grid_search.best_params_

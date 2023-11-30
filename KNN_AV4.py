@@ -62,7 +62,7 @@ def load_gtzan_dataset_csv(file_path):
 
 
 # 음악 파일에서 특징 추출
-excel_file_path = "result/features_30_sec_1.csv"
+excel_file_path = "result/2.csv"
 
 # GTZAN 데이터셋 로드
 X, y = load_gtzan_dataset_csv(excel_file_path)
@@ -83,8 +83,7 @@ outlier_rows = []
 for label in unique_labels:
     # 라벨에 해당하는 데이터 추출
     X_label = X_train[y_train == label]
-    if label == 9  :
-        continue
+
     # Z 점수 계산
     z_scores = stats.zscore(X_label)
 

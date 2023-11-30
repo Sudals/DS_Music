@@ -62,7 +62,7 @@ def load_gtzan_dataset_csv(file_path):
 
 
 # 음악 파일에서 특징 추출
-excel_file_path = "result/features_30_sec_2.csv"
+excel_file_path = "result/2.csv"
 
 # GTZAN 데이터셋 로드
 X, y = load_gtzan_dataset_csv(excel_file_path)
@@ -99,10 +99,10 @@ print("Y_cleaned 길이:", len(Y_cleaned))
 import random
 
 # 0부터 100 사이의 무작위 정수 생성
-random_number = random.randint(0, 100000)
-#random_number =25
-X_train, X_test, y_train, y_test = train_test_split(X_cleaned,Y_cleaned, test_size=0.3,random_state=random_number)
-X_train_O, X_test_O, y_train_O, y_test_O = train_test_split(X,y, test_size=0.3,random_state=random_number)
+#random_number = random.randint(0, 100000)
+random_number =42
+X_train, X_test, y_train, y_test = train_test_split(X_cleaned,Y_cleaned, test_size=0.2,random_state=random_number)
+X_train_O, X_test_O, y_train_O, y_test_O = train_test_split(X,y, test_size=0.2,random_state=random_number)
 # 데이터 표준화
 scaler = StandardScaler()
 #mean=[3982.105259083702, 1976836.2706275356, 0.0731954897310237, 0.0014917932585568074, 6.13349280998751e-05, 0.050155487956679234, 2.170167269288383e-05, 0.011858261843052428, 122.79749742058611, -78.78239765025593, 2778.629652053683, 111.7203561017479, 766.0240252584258, 0.21274313363171032, 379.3651279662916, 29.17464940424466, 177.35889726779058, 5.071347069304616, 119.71668656491866, 11.36219605767478, 96.90342561860162, 0.6154663614483769, 81.83019666978768, 6.341908038196008, 71.74838240761548, -1.016142874172597, 66.44399940043691, 3.8418605261785297, 62.259243367665356, -1.8934303849159162, 60.43406424531836, 3.0618617791734684, 57.85195346691642, -2.059976881615853, 57.905859119850184, 0.6521998091593632, 54.989231121722845, -2.744408999289634, 54.35979354182274, 1.3682237501586776, 51.965959350187326, -2.7321717997663573, 51.17691022097377, 1.2846625538309004, 52.784461373907604, -1.981652125831127, 55.25414702559311, 0.25063613611610475]

@@ -60,7 +60,7 @@ def load_gtzan_dataset_csv(file_path):
 
 
 # 음악 파일에서 특징 추출
-excel_file_path = "result/features_30_sec_2.csv"
+excel_file_path = "result/2.csv"
 
 # GTZAN 데이터셋 로드
 X, y = load_gtzan_dataset_csv(excel_file_path)
@@ -78,11 +78,8 @@ np.savetxt('mean.txt', mean, fmt='%.22f')
 np.savetxt('std.txt', std, fmt='%.18f')
 
 
-pca_1 = PCA(n_components=55)  # 주성분 수는 조정 가능
-X_pca_1 = pca_1.fit_transform(X_train_scaled)
-
 # 데이터셋을 훈련 세트와 테스트 세트로 분할
-X_train, X_test, y_train, y_test = train_test_split(X_train_scaled, y, test_size=0.2,random_state=25)
+X_train, X_test, y_train, y_test = train_test_split(X_train_scaled, y, test_size=0.2,random_state=42)
 
 
 # 추정된 평균과 표준 편차를 파일에 저장
@@ -99,22 +96,6 @@ X_train, X_test, y_train, y_test = train_test_split(X_train_scaled, y, test_size
 # with open('mean_std.txt', 'w') as f:
 #     f.write('mean: ' + str(mean_d) + '\n')
 #     f.write('std: ' + str(std_d) + '\n')
-
-
-# Z 점수 계산
-z_scores = stats.zscore(X_train)
-
-# Z 점수가 특정 임계값을 초과하는 데이터 포인트 식별
-threshold = 1
-outliers = (np.abs(z_scores) > threshold).all(axis=1)
-num_outliers = np.sum(outliers)
-print("=======================================")
-print(f"Number of outliers: {num_outliers}")
-# 이상치 제거
-X_train_no_outliers = X_train[~outliers]
-print(len(X_train_no_outliers))
-y_train_no_outliers = y_train[~outliers]
-print(len(y_train_no_outliers))
 
 # KNN 모델 초기화
 knn_model = KNeighborsClassifier()

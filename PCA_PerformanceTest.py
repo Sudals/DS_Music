@@ -7,6 +7,7 @@ from sklearn.metrics import accuracy_score, f1_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report
 from sklearn.decomposition import PCA
+from sklearn.decomposition import KernelPCA
 import joblib
 from scipy import stats
 def load_gtzan_dataset_csv(file_path):
@@ -29,7 +30,7 @@ def load_gtzan_dataset_csv(file_path):
     df = df.dropna()
     # 수동으로 선택한 특징 열
     selected_feature_cols = [
-         'chroma_stft_mean', 'chroma_stft_var', 'rms_mean', 'rms_var',
+        'chroma_stft_mean', 'chroma_stft_var', 'rms_mean', 'rms_var',
         'spectral_centroid_mean', 'spectral_centroid_var', 'spectral_bandwidth_mean', 'spectral_bandwidth_var',
         'rolloff_mean', 'rolloff_var', 'zero_crossing_rate_mean', 'zero_crossing_rate_var',
         'harmony_mean', 'harmony_var', 'perceptr_mean', 'perceptr_var', 'tempo',
@@ -50,7 +51,7 @@ def load_gtzan_dataset_csv(file_path):
     y = df_selected['label']
 
     return X.to_numpy(), y.to_numpy()
-
+loaded_kpca = joblib.load('kpca_model.pkl')
 mean = np.loadtxt('mean.txt')
 std = np.loadtxt('std.txt')
 print(len(mean))
@@ -93,26 +94,24 @@ scaler = StandardScaler()
 #print(len(X))
 X_test_scaled = (X-mean)/std
 
-# pca =PCA(n_components=47)
-# X_test_pca = pca.fit_transform(X_test_scaled)
+
 # 모델 불러오기
 loaded_model = joblib.load('svm_model.pkl')
 print("=================")
-
+X_test_pca = loaded_kpca.transform(X_test_scaled)
 # 예측
-prediction = loaded_model.predict(X_test_scaled)
+prediction = loaded_model.predict(X_test_pca)
 accuracy = accuracy_score(y, prediction)
 print(f"Accuracy: {accuracy}")
 f1 = f1_score(y, prediction, average='micro')
 print(f"F1 Score: {f1}")
-report = classification_report(y, prediction,zero_division=1)
+report = classification_report(y, prediction)
 print(report)
-predicted_probabilities = loaded_model.predict_proba(X_test_scaled)
-np.set_printoptions(suppress=True)
+predicted_probabilities = loaded_model.predict_proba(X_test_pca)
+
 # 출력된 확률을 확인합니다.
 print(predicted_probabilities)
-np.savetxt('predictions.txt',predicted_probabilities,'%.18f')
 most_common_value = np.argmax(np.bincount(prediction))
 print(most_common_value)
 print(prediction)
-#np.savetxt('predictions.txt', prediction, fmt='%d')
+np.savetxt('predictions.txt', prediction, fmt='%d')

@@ -3,7 +3,7 @@ import pandas as pd
 import os
 
 
-def analyze_audio(file_path, label, i, duration=30):
+def analyze_audio(file_path, label, i, il, duration=30):
     # 음원 파일 로드
     y, sr = librosa.load(file_path, sr=22050)
 
@@ -67,7 +67,7 @@ def analyze_audio(file_path, label, i, duration=30):
         features.append(mfcc_means[i])
         features.append(mfcc_vars[i])
         
-    features.append("7")
+    features.append(il)
 
     return features
 
@@ -105,15 +105,16 @@ def save_to_mapping(data, output_mapping_path):
 
 
 if __name__ == "__main__":
-    labelClass = "edm"  # 장르
+    labelClass = "funk"  # 장르
 
-    input_directory = os.getcwd() + "/SoundTrack/" + labelClass # 현재 경로 가져오기
-    output_csv_path = "EDM_Data.csv"  # 출력 csv 이름 설정
-    output_mapping_path = "EDM_Map.csv"
+    input_directory = os.getcwd() + "/SoundTrack/" + labelClass  # 현재 경로 가져오기
+    output_csv_path = "Funk_Data.csv"  # 출력 csv 이름 설정
+    output_mapping_path = "Funk_Map.csv"
 
     data = []  # csv에 쓰일 data 리스트
     map = []
     i = 100  # 음원 인덱스
+    label_Index = 0
 
     for filename in os.listdir(input_directory):  # 폴더 내부 탐색
         if filename.endswith(".mp3") or filename.endswith(".wav"):  # 파일이 mp3 or wav인 경우
@@ -121,7 +122,7 @@ if __name__ == "__main__":
             print(filename)
 
             # analyze_audio 함수를 통해 특징 추출
-            features = analyze_audio(file_path, labelClass, i)
+            features = analyze_audio(file_path, labelClass, i, label_Index)
             mapping = map_data(file_path, labelClass, i)
 
             data.append(features)  # 결과를 data 리스트에 저장
@@ -132,4 +133,4 @@ if __name__ == "__main__":
     # 추출된 특징들을 csv 파일로 저장
     #print(map[0])
     save_to_csv(data, output_csv_path)
-    save_to_mapping(map,output_mapping_path)
+    save_to_mapping(map, output_mapping_path)

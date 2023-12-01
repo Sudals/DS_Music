@@ -20,6 +20,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 from sklearn.manifold import MDS
 from sklearn.decomposition import PCA
+from sklearn.metrics import precision_recall_curve
 import joblib
 def load_gtzan_dataset_csv(file_path):
     df = pd.read_csv(file_path)
@@ -78,7 +79,7 @@ def load_gtzan_dataset_csv(file_path):
 
 
 # 음악 파일에서 특징 추출
-excel_file_path = "result/features_30_sec_2.csv"
+excel_file_path = "result/S_features_sec.csv"
 
 X, y = load_gtzan_dataset_csv(excel_file_path)
 
@@ -86,106 +87,39 @@ X, y = load_gtzan_dataset_csv(excel_file_path)
 ss = StandardScaler()
 X_Scale = ss.fit_transform(X)
 
-svm_model = SVC(kernel='rbf', probability=True)
 
-# 차원 범위 설정 (예: 1부터 55까지)
-n_components_range = list(range(49, 56))
+X_train, X_test, y_train, y_test = train_test_split(X_Scale, y, test_size=0.2,random_state=25)
 
-best_score = 0
-best_n_components = 0
-
-# 차원 범위에서 가장 높은 정확도를 갖는 차원 탐색
-for n_components in n_components_range:
-    kpca = KernelPCA(n_components=n_components,kernel='rbf')
-    X_kpca = kpca.fit_transform(X_Scale)
-    scores = cross_val_score(svm_model, X_kpca, y, cv=5)
-    mean_score = scores.mean()
-    print(f"{n_components} : {mean_score}")
-    if mean_score > best_score:
-        best_score = mean_score
-        best_n_components = n_components
-
-# 최적 차원 출력
-print("Best Dimension:", best_n_components)
-
-# 최적 차원으로 변환
-best_kpca = KernelPCA(n_components=best_n_components,kernel='rbf')
-X_best_kpca = best_kpca.fit_transform(X_Scale)
-joblib.dump(best_kpca, 'kpca_model.pkl')
-print(X_Scale.shape[1])
-# 데이터 분할 (학습용 데이터와 테스트용 데이터로 분리)
-X_train, X_test, y_train, y_test = train_test_split(X_best_kpca, y, test_size=0.2,random_state=42)
-
-
-
-# t-SNE를 사용하여 2차원으로 시각화
-tsne = TSNE(n_components=2, random_state=42)
-X_tsne = tsne.fit_transform(X_train)
-
-label_colors = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'cyan', 'magenta', 'black', 'grey']
-
-# 시각화
-plt.figure(figsize=(15, 10))
-for i, label in enumerate(range(1, 11)):
-    indices = (y_train == label)
-    #plt.subplot(2, 5, i + 1)
-    plt.scatter(X_tsne[indices, 0], X_tsne[indices, 1],c=label_colors[i], label=f'Label {label}')
-    # for j, (x, y) in enumerate(zip(X_tsne[indices, 0], X_tsne[indices, 1])):
-    #     plt.annotate(f'{j}', (x, y), textcoords="offset points", xytext=(0, 10), ha='center')
-
-plt.title(f'Label')
-plt.xlabel('t-SNE Dimension 1')
-plt.ylabel('t-SNE Dimension 2')
-plt.legend()
-plt.tight_layout()
-plt.show()
-
-
-# # 시각화
-# plt.figure(figsize=(15, 10))
-# for i, label in enumerate(range(1, 11)):
-#     indices = (y == label)
-#     plt.subplot(2, 5, i + 1)
-#     plt.scatter(X_tsne[indices, 0], X_tsne[indices, 1],c=label_colors[i], label=f'Label {label}')
-#     plt.title(f'Label')
-#     plt.xlabel('t-SNE Dimension 1')
-#     plt.ylabel('t-SNE Dimension 2')
-#     plt.legend()
-#
-#
-# plt.tight_layout()
-# plt.show()
 # SVM 모델 생성
 svm_model = SVC(kernel='rbf',probability=True)
-# 다른 커널 옵션: 'rbf' (RBF 커널), 'poly' (다항식 커널) 등
-# 모델 학습
+
+
 svm_model.fit(X_train, y_train)
 
 mean = ss.mean_
 std = ss.scale_
-print(len(mean))
 np.savetxt('mean.txt', mean, fmt='%.22f')
 np.savetxt('std.txt', std, fmt='%.18f')
 # 테스트 데이터에 대한 예측
 y_pred = svm_model.predict(X_test)
 report = classification_report(y_test, y_pred)
+print(svm_model.score(X_train,y_train))
+print(svm_model.score(X_test,y_test))
 print(report)
 # 정확도 평가
 accuracy = accuracy_score(y_test, y_pred)
-
 print(f"Accuracy: {accuracy:.2f}")
 print(y_pred)
 variances = X_train.var(axis=0)
-
-# 감마 값을 계산 (n_features * X.var())
-gamma_value = 1 / (55 * variances.mean())
-print(f"Estimated Gamma Value: {gamma_value}")
-cv_results = cross_validate(svm_model, X_best_kpca, y, cv=5, return_train_score=True)
+cv_results = cross_validate(svm_model, X_Scale, y, cv=5, return_train_score=True)
 train_scores = cv_results['train_score']
 print("Train scores:", train_scores)
 print("Average train score:", np.mean(train_scores))
 test_scores = cv_results['test_score']
 print("Test scores:", test_scores)
 print("Average test score:", np.mean(test_scores))
+# 감마 값을 계산 (n_features * X.var())
+gamma_value = 1 / (55 * variances.mean())
+print(f"Estimated Gamma Value: {gamma_value}")
 model_filename = 'svm_model.pkl'
 joblib.dump(svm_model, model_filename)

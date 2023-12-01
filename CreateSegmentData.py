@@ -66,6 +66,7 @@ def analyze_audio(file_path, label, i, duration=30):
     for i in range(len(mfcc_means)):
         features.append(mfcc_means[i])
         features.append(mfcc_vars[i])
+        
     features.append("7")
 
     return features

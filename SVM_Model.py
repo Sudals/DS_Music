@@ -1,5 +1,5 @@
 from sklearn import datasets
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_validate
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 import numpy as np
@@ -20,6 +20,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 from sklearn.manifold import MDS
 from sklearn.decomposition import PCA
+from sklearn.metrics import precision_recall_curve
 import joblib
 def load_gtzan_dataset_csv(file_path):
     df = pd.read_csv(file_path)
@@ -79,20 +80,20 @@ def load_gtzan_dataset_csv(file_path):
 
 # 음악 파일에서 특징 추출
 excel_file_path = "result/features_30_sec_2.csv"
-
+excel_file_path2 = "result/features_30_sec_1.csv"
 X, y = load_gtzan_dataset_csv(excel_file_path)
-
+X2, y2 = load_gtzan_dataset_csv(excel_file_path2)
 
 ss = StandardScaler()
 X_Scale = ss.fit_transform(X)
-
+X2_Scale = ss.transform(X2)
 
 print(X_Scale.shape[1])
-kpca = KernelPCA(n_components=20,kernel='rbf')
+kpca = KernelPCA(n_components=57,kernel='rbf')
 X_kpca = kpca.fit_transform(X_Scale)
 joblib.dump(kpca, 'kpca_model.pkl')
 # 데이터 분할 (학습용 데이터와 테스트용 데이터로 분리)
-X_train, X_test, y_train, y_test = train_test_split(X_Scale, y, test_size=0.3,random_state=2)
+X_train, X_test, y_train, y_test = train_test_split(X_Scale, y, test_size=0.2,random_state=42)
 
 
 
@@ -118,8 +119,27 @@ plt.tight_layout()
 plt.show()
 # SVM 모델 생성
 svm_model = SVC(kernel='rbf',probability=True)
-# 다른 커널 옵션: 'rbf' (RBF 커널), 'poly' (다항식 커널) 등
-# 모델 학습
+param_grid = {'max_iter': [50,70,80,90,100, 200, 300, 400, 500,600,700,800]}  # 최적의 max_iter 값 범위 설정
+
+# 그리드 서치 객체 생성
+grid_search = GridSearchCV(estimator=svm_model, param_grid=param_grid, cv=5, n_jobs=-1)
+
+# 그리드 서치 수행
+grid_search.fit(X_train, y_train)
+
+# 최적의 max_iter 값 출력
+print("Best max_iter:", grid_search.best_params_['max_iter'])
+print(grid_search.score(X_train,y_train))
+print(grid_search.score(X_test,y_test))
+best_model = grid_search.best_estimator_
+
+# 테스트 데이터에 대한 예측
+y_pred2 = best_model.predict(X_test)
+
+# 정확도 평가
+accuracy2 = accuracy_score(y_test, y_pred2)
+print(f"Accuracy: {accuracy2:.2f}")
+
 svm_model.fit(X_train, y_train)
 
 mean = ss.mean_
@@ -129,15 +149,59 @@ np.savetxt('std.txt', std, fmt='%.18f')
 # 테스트 데이터에 대한 예측
 y_pred = svm_model.predict(X_test)
 report = classification_report(y_test, y_pred)
+print(svm_model.score(X_train,y_train))
+print(svm_model.score(X_test,y_test))
 print(report)
 # 정확도 평가
 accuracy = accuracy_score(y_test, y_pred)
 print(f"Accuracy: {accuracy:.2f}")
 print(y_pred)
 variances = X_train.var(axis=0)
-
+cv_results = cross_validate(svm_model, X_Scale, y, cv=5, return_train_score=True)
+train_scores = cv_results['train_score']
+print("Train scores:", train_scores)
+print("Average train score:", np.mean(train_scores))
+test_scores = cv_results['test_score']
+print("Test scores:", test_scores)
+print("Average test score:", np.mean(test_scores))
 # 감마 값을 계산 (n_features * X.var())
 gamma_value = 1 / (55 * variances.mean())
 print(f"Estimated Gamma Value: {gamma_value}")
 model_filename = 'svm_model.pkl'
 joblib.dump(svm_model, model_filename)
+
+y_scores = svm_model.predict_proba(X_test)
+
+# 클래스별 Precision-Recall을 계산합니다.
+precision = dict()
+recall = dict()
+plt.figure(figsize=(8, 6))
+
+plt.figure(figsize=(8, 6))
+
+for i in range(1, 11):  # 클래스 수에 맞게 수정
+    # One-vs-Rest 방식으로 이진 분류기 생성
+    svm_binary = SVC(kernel='rbf', probability=True)
+
+    # 클래스 i를 양성 클래스로 설정하고 나머지 클래스를 음성 클래스로 설정
+    y_train_binary = (y_train == i).astype(int)
+    y_test_binary = (y_test == i).astype(int)
+
+    # 모델 학습
+    svm_binary.fit(X_train, y_train_binary)
+
+    # 클래스 i에 대한 예측 확률 계산
+    y_scores = svm_binary.predict_proba(X_test)[:, 1]  # 양성 클래스의 확률만 사용
+
+    # Precision-Recall 곡선 계산
+    precision, recall, _ = precision_recall_curve(y_test_binary, y_scores)
+
+    # 곡선 그리기
+    plt.plot(recall, precision, lw=2, label='class {}'.format(i))
+
+plt.xlabel("Recall")
+plt.ylabel("Precision")
+plt.legend(loc="best")
+plt.title("Precision-Recall Curve for each class (One-vs-Rest)")
+plt.grid(True)
+plt.show()

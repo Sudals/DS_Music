@@ -2,7 +2,7 @@ import pickle
 import numpy as np
 import pandas as pd
 from scipy import stats
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_validate
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 
@@ -19,13 +19,13 @@ def removeOutlier(train_scaled, train_target):
     return train_scaled[filtered_indices], train_target[filtered_indices]
 
 
-def showResult(count=100):
-    predictions = lr.predict(test_scaled[:count])
-    answer = test_target[:count]
-
-    # 예측 값과 실제 정답 출력
-    for i in range(count):
-        print(f"예측: {predictions[i]}, 정답: {answer[i]}")
+# def showResult(count=100):
+#     #predictions = lr.predict(test_scaled[:count])
+#     answer = test_target[:count]
+#
+#     # 예측 값과 실제 정답 출력
+#     for i in range(count):
+#         print(f"예측: {predictions[i]}, 정답: {answer[i]}")
 
 
 features = ['chroma_stft_mean', 'chroma_stft_var', 'chroma_stft_var', 'rms_var', 'spectral_centroid_mean',
@@ -40,20 +40,16 @@ features = ['chroma_stft_mean', 'chroma_stft_var', 'chroma_stft_var', 'rms_var',
             'mfcc17_var', 'mfcc18_mean', 'mfcc18_var', 'mfcc19_mean', 'mfcc19_var', 'mfcc20_mean', 'mfcc20_var']
 
 # music = pd.read_csv('result/GTZAN_features_30_sec.csv')
-music = pd.read_csv('result/total_3sec/DS_feature_3_sec_1.csv')
+music = pd.read_csv('result/features_30_sec_single_label9.csv')
 # music = pd.read_csv('features_3_sec.csv')
 
 music_input = music[features].to_numpy()
 music_target = music['label'].to_numpy()
-
-train_input, test_input, train_target, test_target = train_test_split(music_input, music_target, test_size=0.2)
-
-# 데이터 정규화
 ss = StandardScaler()
-ss.fit(train_input)
+X=ss.fit_transform(music_input)
 
-train_scaled = ss.transform(train_input)
-test_scaled = ss.transform(test_input)
+train_input, test_input, train_target, test_target = train_test_split(X, music_target, test_size=0.2,random_state=25)
+
 
 mean = ss.mean_
 std = ss.scale_
@@ -65,14 +61,20 @@ np.savetxt('std_logistic.txt', std, fmt='%.18f')
 # train_scaled, train_target = removeOutlier(train_scaled, train_target)
 
 lr = LogisticRegression(C=20, max_iter=1000)
-lr.fit(train_scaled, train_target)
+lr.fit(train_input, train_target)
 
 with open('model/logisticRegressionModel.pkl', 'wb') as model_file:
     pickle.dump(lr, model_file)
 
-print("학습 데이터 정확도 : " + str(lr.score(train_scaled, train_target)))
-print("테스트 데이터 정확도 : " + str(lr.score(test_scaled, test_target)))
-
+print("학습 데이터 정확도 : " + str(lr.score(train_input, train_target)))
+print("테스트 데이터 정확도 : " + str(lr.score(test_input, test_target)))
+cv_results = cross_validate(lr, X, music_target, cv=5, return_train_score=True)
+train_scores = cv_results['train_score']
+print("Train scores:", train_scores)
+print("Average train score:", np.mean(train_scores))
+test_scores = cv_results['test_score']
+print("Test scores:", test_scores)
+print("Average test score:", np.mean(test_scores))
 # proba = lr.predict_proba(test_scaled[:5])
 # print(lr.classes_)
 # print(np.round(proba, decimals=3))

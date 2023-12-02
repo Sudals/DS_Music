@@ -10,6 +10,21 @@ from sklearn.decomposition import PCA
 from sklearn.decomposition import KernelPCA
 import joblib
 from scipy import stats
+def convert_labels_to_strings(labels):
+    label_mapping = {
+        1: '클래식',
+        2: '컨트리',
+        3: '디스코',
+        4: '힙합',
+        5: '재즈',
+        6: '메탈',
+        7: '팝',
+        8: '레게',
+        9: '락'
+    }
+
+    converted_labels = [label_mapping[label] for label in labels]
+    return converted_labels
 def load_gtzan_dataset_csv(file_path):
     df = pd.read_csv(file_path)
     missing_values = df.isnull().sum()
@@ -48,52 +63,19 @@ def load_gtzan_dataset_csv(file_path):
 
     # X는 선택한 특징 열, y는 'genre' 열
     X = df_selected.drop(columns=['label'])
-    y = df_selected['label']
 
-    return X.to_numpy(), y.to_numpy()
+    return X.to_numpy()
 loaded_kpca = joblib.load('kpca_model.pkl')
 mean = np.loadtxt('mean.txt')
 std = np.loadtxt('std.txt')
 print(len(mean))
 # 음악 파일에서 특징 추출
-excel_file_path = "result/features_30_sec_1.csv"
-X, y = load_gtzan_dataset_csv(excel_file_path)
-
-
-unique_labels = np.unique(y)
-outlier_rows = []
-
-# for label in unique_labels:
-#     # 라벨에 해당하는 데이터 추출
-#     X_label = X[y == label]
-#
-#     # Z 점수 계산
-#     z_scores = stats.zscore(X_label)
-#
-#     # Z 점수가 임계치를 넘는 행의 인덱스 찾기
-#     threshold = 2.5
-#
-#     outlier_rows_label = np.where(np.any(np.abs(z_scores) > threshold, axis=1))[0]
-#
-#     outlier_indices = np.where(y == label)[0][outlier_rows_label]
-#     outlier_rows.extend(outlier_indices)
-#
-# # 중복된 인덱스 제거하여 이상치 제거
-# outlier_rows = np.unique(outlier_rows)
-#
-# X_cleaned = np.delete(X, outlier_rows, axis=0)
-# Y_cleaned = np.delete(y, outlier_rows, axis=0)
-#
-# print("X_cleaned:", X_cleaned)
-# print("Y_cleaned:", Y_cleaned)
-# print("X_cleaned 길이:", len(X_cleaned))
-# print("Y_cleaned 길이:", len(Y_cleaned))
-
+excel_file_path = "result/TestFile.csv"
+X = load_gtzan_dataset_csv(excel_file_path)
 
 scaler = StandardScaler()
 #print(len(X))
 X_test_scaled = (X-mean)/std
-
 
 # 모델 불러오기
 loaded_model = joblib.load('svm_model.pkl')
@@ -101,14 +83,26 @@ print("=================")
 X_test_pca = loaded_kpca.transform(X_test_scaled)
 # 예측
 prediction = loaded_model.predict(X_test_pca)
-accuracy = accuracy_score(y, prediction)
-print(f"Accuracy: {accuracy}")
-f1 = f1_score(y, prediction, average='micro')
-print(f"F1 Score: {f1}")
-report = classification_report(y, prediction)
-print(report)
+# accuracy = accuracy_score(y, prediction)
+# print(f"Accuracy: {accuracy}")
+# report = classification_report(y, prediction)
+# print(report)
 predicted_probabilities = loaded_model.predict_proba(X_test_pca)
 
+# 임계값 설정
+threshold = 0.3
+
+for i, sample_probs in enumerate(predicted_probabilities):
+    # 확률이 큰 순서대로 라벨의 인덱스를 정렬
+    sorted_labels = np.argsort(sample_probs)[::-1]
+
+    # 임계값을 초과하는 라벨 찾기
+    selected_labels = sorted_labels[sample_probs[sorted_labels] > threshold]
+    if len(selected_labels)!=0 :
+        converted_labels = convert_labels_to_strings(selected_labels + 1)
+        print(f"Sample {i + 1} - Selected Labels (Sorted):", converted_labels)
+    else :
+        print(f"Sample {i + 1} - Selected Labels (Sorted): 장르없음",)
 # 출력된 확률을 확인합니다.
 print(predicted_probabilities)
 most_common_value = np.argmax(np.bincount(prediction))

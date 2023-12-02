@@ -76,7 +76,7 @@ def load_gtzan_dataset_csv(file_path):
 
     return X.to_numpy(), y.to_numpy()
 
-pca_kernel = 'poly'
+pca_kernel = 'linear'
 svm_kernel = 'rbf'
 # 음악 파일에서 특징 추출
 excel_file_path = "result/features_30_sec_single_label9.csv"

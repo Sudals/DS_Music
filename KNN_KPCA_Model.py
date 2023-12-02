@@ -85,7 +85,7 @@ best_n_components = 0
 
 # 차원 범위에서 가장 높은 정확도를 갖는 차원 탐색
 for n_components in n_components_range:
-    pca = PCA(n_components=n_components)
+    pca = KernelPCA(n_components=n_components,kernel="rbf")
     X_pca = pca.fit_transform(X_Scale)
     scores = cross_val_score(knn_model_T, X_pca, y, cv=5)
     mean_score = scores.mean()

@@ -77,7 +77,7 @@ def load_gtzan_dataset_csv(file_path):
 
 
 # 음악 파일에서 특징 추출
-excel_file_path = "result/features_30_sec_2.csv"
+excel_file_path = "result/features_30_sec_single_label.csv"
 
 X, y = load_gtzan_dataset_csv(excel_file_path)
 

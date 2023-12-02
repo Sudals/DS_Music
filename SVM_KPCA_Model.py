@@ -76,7 +76,8 @@ def load_gtzan_dataset_csv(file_path):
 
     return X.to_numpy(), y.to_numpy()
 
-svm_kernel = 'sigmoid'
+pca_kernel = 'poly'
+svm_kernel = 'rbf'
 # 음악 파일에서 특징 추출
 excel_file_path = "result/features_30_sec_single_label9.csv"
 
@@ -96,9 +97,9 @@ best_n_components = 0
 
 # 차원 범위에서 가장 높은 정확도를 갖는 차원 탐색
 for n_components in n_components_range:
-    pca = PCA(n_components=n_components)
-    X_pca = pca.fit_transform(X_Scale)
-    scores = cross_val_score(svm_model_T, X_pca, y, cv=5)
+    kpca = KernelPCA(n_components=n_components,kernel=pca_kernel)
+    X_kpca = kpca.fit_transform(X_Scale)
+    scores = cross_val_score(svm_model_T, X_kpca, y, cv=5)
     mean_score = scores.mean()
     print(f"{n_components} : {mean_score}")
     if mean_score > best_score:
@@ -109,12 +110,12 @@ for n_components in n_components_range:
 print("Best Dimension:", best_n_components)
 
 # 최적 차원으로 변환
-best_pca = PCA(n_components=best_n_components)
-X_best_pca = best_pca.fit_transform(X_Scale)
-joblib.dump(best_pca, 'kpca_model.pkl')
+best_kpca = KernelPCA(n_components=best_n_components,kernel=pca_kernel)
+X_best_kpca = best_kpca.fit_transform(X_Scale)
+joblib.dump(best_kpca, 'kpca_model.pkl')
 print(X_Scale.shape[1])
 # 데이터 분할 (학습용 데이터와 테스트용 데이터로 분리)
-X_train, X_test, y_train, y_test = train_test_split(X_best_pca, y, test_size=0.2,random_state=25)
+X_train, X_test, y_train, y_test = train_test_split(X_best_kpca, y, test_size=0.2,random_state=25)
 
 
 
@@ -179,7 +180,7 @@ variances = X_train.var(axis=0)
 # 감마 값을 계산 (n_features * X.var())
 gamma_value = 1 / (55 * variances.mean())
 print(f"Estimated Gamma Value: {gamma_value}")
-cv_results = cross_validate(svm_model, X_best_pca, y, cv=5, return_train_score=True)
+cv_results = cross_validate(svm_model, X_best_kpca, y, cv=5, return_train_score=True)
 train_scores = cv_results['train_score']
 print("Train scores:", train_scores)
 print("Average train score:", np.mean(train_scores))

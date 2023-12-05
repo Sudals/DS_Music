@@ -1,14 +1,14 @@
 from sklearn import datasets
 from sklearn.model_selection import train_test_split, cross_validate
 from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, precision_recall_curve
 import numpy as np
 import pandas as pd
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier, kneighbors_graph
 from sklearn.metrics import accuracy_score, f1_score
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, label_binarize
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
 from sklearn.preprocessing import RobustScaler
@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 from sklearn.manifold import MDS
 from sklearn.decomposition import PCA
 import joblib
+
 def load_gtzan_dataset_csv(file_path):
     df = pd.read_csv(file_path)
     missing_values = df.isnull().sum()
@@ -78,8 +79,9 @@ def load_gtzan_dataset_csv(file_path):
 
 pca_kernel = 'linear'
 svm_kernel = 'rbf'
+max_iter=800
 # 음악 파일에서 특징 추출
-excel_file_path = "result/features_30_sec_single_label9.csv"
+excel_file_path = "features_3_sec.csv"
 
 X, y = load_gtzan_dataset_csv(excel_file_path)
 
@@ -93,9 +95,9 @@ svm_model_T = SVC(kernel=svm_kernel, probability=True)
 n_components_range = list(range(2, 58))
 
 best_score = 0
-best_n_components = 0
+best_n_components = 54
 
-# 차원 범위에서 가장 높은 정확도를 갖는 차원 탐색
+# # 차원 범위에서 가장 높은 정확도를 갖는 차원 탐색
 for n_components in n_components_range:
     kpca = KernelPCA(n_components=n_components,kernel=pca_kernel)
     X_kpca = kpca.fit_transform(X_Scale)
@@ -115,7 +117,7 @@ X_best_kpca = best_kpca.fit_transform(X_Scale)
 joblib.dump(best_kpca, 'kpca_model.pkl')
 print(X_Scale.shape[1])
 # 데이터 분할 (학습용 데이터와 테스트용 데이터로 분리)
-X_train, X_test, y_train, y_test = train_test_split(X_best_kpca, y, test_size=0.2,random_state=25)
+X_train, X_test, y_train, y_test = train_test_split(X_Scale, y, test_size=0.2,random_state=25)
 
 
 
@@ -153,8 +155,17 @@ label_colors = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'cyan', 'm
 #
 # plt.tight_layout()
 # plt.show()
+param_grid = {'C': [0.001, 0.01, 0.1, 1, 10, 100]}
 # SVM 모델 생성
 svm_model = SVC(kernel=svm_kernel,probability=True)
+# grid_search = GridSearchCV(svm_model, param_grid, cv=5)
+# grid_search.fit(X_train, y_train)
+# best_C = grid_search.best_params_['C']
+# best_svm_model = grid_search.best_estimator_
+# print(f"Best C Value: {best_C}")
+# y_pred = best_svm_model.predict(X_test)
+# report = classification_report(y_test, y_pred)
+# print(report)
 # 다른 커널 옵션: 'rbf' (RBF 커널), 'poly' (다항식 커널) 등
 # 모델 학습
 svm_model.fit(X_train, y_train)
@@ -173,6 +184,9 @@ print(report)
 # 정확도 평가
 accuracy = accuracy_score(y_test, y_pred)
 
+# 훈련 데이터에 대한 판별 함수 값
+decision_values = svm_model.decision_function(X_train)
+
 print(f"Accuracy: {accuracy:.2f}")
 print(y_pred)
 variances = X_train.var(axis=0)
@@ -189,3 +203,35 @@ print("Test scores:", test_scores)
 print("Average test score:", np.mean(test_scores))
 model_filename = 'svm_model.pkl'
 joblib.dump(svm_model, model_filename)
+# 클래스별 Precision-Recall을 계산합니다.
+precision = dict()
+recall = dict()
+
+plt.figure(figsize=(8, 6))
+
+# for i in range(1, 10):  # 클래스 수에 맞게 수정
+#     # One-vs-Rest 방식으로 이진 분류기 생성
+#     svm_binary = SVC(kernel='rbf', probability=True)
+#
+#     # 클래스 i를 양성 클래스로 설정하고 나머지 클래스를 음성 클래스로 설정
+#     y_train_binary = (y_train == i).astype(int)
+#     y_test_binary = (y_test == i).astype(int)
+#
+#     # 모델 학습
+#     svm_binary.fit(X_train, y_train_binary)
+#
+#     # 클래스 i에 대한 예측 확률 계산
+#     y_scores = svm_binary.predict_proba(X_test)[:, 1]  # 양성 클래스의 확률만 사용
+#
+#     # Precision-Recall 곡선 계산
+#     precision, recall, _ = precision_recall_curve(y_test_binary, y_scores)
+#
+#     # 곡선 그리기
+#     plt.plot(recall, precision, lw=2, label='class {}'.format(i))
+#
+# plt.xlabel("Recall")
+# plt.ylabel("Precision")
+# plt.legend(loc="best")
+# plt.title("Precision-Recall Curve for each class (One-vs-Rest)")
+# plt.grid(True)
+# plt.show()

@@ -85,7 +85,7 @@ best_n_components = 0
 
 # 차원 범위에서 가장 높은 정확도를 갖는 차원 탐색
 for n_components in n_components_range:
-    pca = KernelPCA(n_components=n_components,kernel="rbf")
+    pca = KernelPCA(n_components=n_components,kernel="linear")
     X_pca = pca.fit_transform(X_Scale)
     scores = cross_val_score(knn_model_T, X_pca, y, cv=5)
     mean_score = scores.mean()
@@ -109,7 +109,7 @@ X_train, X_test, y_train, y_test = train_test_split(X_best_pca, y, test_size=0.2
 # KNN 모델 초기화
 knn_model = KNeighborsClassifier()
 
-param_grid = {'n_neighbors': [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26]}
+param_grid = {'n_neighbors': range(2,25)}
 
 # 훈련 데이터의 연결성 행렬 계산
 connectivity = kneighbors_graph(X_train, n_neighbors=10, mode='connectivity')

@@ -175,7 +175,6 @@ y_scores = svm_model.predict_proba(X_test)
 # 클래스별 Precision-Recall을 계산합니다.
 precision = dict()
 recall = dict()
-plt.figure(figsize=(8, 6))
 
 plt.figure(figsize=(8, 6))
 
